@@ -262,12 +262,19 @@ class PythProductAccount(PythAccount):
         """
         Checks for changes to the list of price accounts of this product.
 
+        This method only checks the changes in price accounts but not the prices. 
+        Refer to use_price_accounts method for more details on the utilization of the price accounts
+        to update the prices of the product account
+
         Returns a tuple of a list of added accounts, and a list of removed accounts.
         """
 
         if self._prices is None:
+            # if there is no historical prices loaded, load the prices from network and return
             prices = await self.refresh_prices()
             return list(prices.values()), []
+        
+        # else if there are old pricing information
         old_prices = dict((price.key, price) for price in self._prices.values())
         new_prices: Dict[PythPriceType, PythPriceAccount] = {}
         added_prices: List[PythPriceAccount] = []
@@ -275,6 +282,9 @@ class PythProductAccount(PythAccount):
             await self.solana.update_accounts([self, *old_prices.values()])
         key = self.first_price_account_key
         while key:
+            # For each price type, check the price account updates, 
+            # if certain price type does not have corresponding price account, 
+            # it will be shown as the added_prices
             account = old_prices.pop(key, None)
             if account is None:
                 account = PythPriceAccount(key, self.solana, product=self)
@@ -304,6 +314,8 @@ class PythProductAccount(PythAccount):
         if expected_key is not None:
             logger.error("expected price account {} but end of list reached", expected_key)
             raise ValueError("missing price account")
+
+        # From the list of new_pricess provided, update the current price of the product account
         self._prices = prices
 
     def update_from(self, buffer: bytes, *, version: int, offset: int = 0) -> None:
@@ -357,13 +369,16 @@ class PythPriceInfo:
     Contains price information.
 
     Attributes:
+        # raw pricing information represented in integer format
         raw_price (int): the raw price
         raw_confidence_interval (int): the raw confidence interval
-        price (int): the price
-        confidence_interval (int): the price confidence interval
         price_status (PythPriceStatus): the price status
         pub_slot (int): the slot time this price information was published
         exponent (int): the power-of-10 order of the price
+
+        # below is the derived fields based on the raw input and exponent
+        price (float): the price
+        confidence_interval (float): the price confidence interval
     """
 
     LENGTH: ClassVar[int] = 32
@@ -379,8 +394,7 @@ class PythPriceInfo:
 
     def __post_init__(self):
         self.price = self.raw_price * (10 ** self.exponent)
-        self.confidence_interval = self.raw_confidence_interval * \
-            (10 ** self.exponent)
+        self.confidence_interval = self.raw_confidence_interval * (10 ** self.exponent)
 
     @staticmethod
     def deserialise(buffer: bytes, offset: int = 0, *, exponent: int) -> PythPriceInfo:
@@ -441,6 +455,7 @@ class PythPriceComponent:
         """
         key = _read_public_key_or_none(buffer, offset)
         if key is None:
+            # do nothing when the key is not available from the buffer
             return None
         offset += SolanaPublicKey.LENGTH
         last_aggregate_price = PythPriceInfo.deserialise(

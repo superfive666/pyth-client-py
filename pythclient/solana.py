@@ -156,6 +156,7 @@ class SolanaClient:
         # can't create one now as the ClientSession has to be created while in an
         # event loop, which we may not yet be in
         self._client = client
+        # This flag indicates if the current client is aiohttp client has been initialized
         self._is_own_client = False
         self.endpoint = endpoint
         self.ws_endpoint = ws_endpoint
@@ -174,6 +175,11 @@ class SolanaClient:
         return id
 
     def _get_client(self) -> aiohttp.ClientSession:
+        """ 
+        This method lazily intialize the aiohttp client session. 
+        It has to be done in an event loop which only exists during the client 
+        execution run time.
+        """
         client = self._client
         if client is None:
             client = self._client = aiohttp.ClientSession()
