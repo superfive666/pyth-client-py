@@ -24,6 +24,7 @@ to_exit = False
 
 
 def set_to_exit(sig: Any, frame: Any):
+    print("Program interrupted, exiting...", sig, frame)
     global to_exit
     to_exit = True
 
@@ -34,8 +35,19 @@ signal.signal(signal.SIGINT, set_to_exit)
 async def main():
     global to_exit
     use_program = len(sys.argv) >= 2 and sys.argv[1] == "program"
-    v2_first_mapping_account_key = get_key("devnet", "mapping")
-    v2_program_key = get_key("devnet", "program")
+    network = 'devnet'
+
+    v2_first_mapping_account_key = get_key(network, "mapping")
+    v2_program_key = get_key(network, "program")
+
+    print(f"Price dump started with mapping account key: {v2_first_mapping_account_key}")
+    print(f"Price dump started with program key: {v2_program_key}")
+    
+    # Add one level of checking if the first mapping account key exists
+    if v2_first_mapping_account_key is None:
+        print(f"First mapping account key for {network} not found")
+        return
+
     async with PythClient(
         first_mapping_account_key=v2_first_mapping_account_key,
         program_key=v2_program_key if use_program else None,
@@ -59,11 +71,14 @@ async def main():
                     "p/m",
                     pr.aggregate_price_confidence_interval,
                 )
-
+            break
+        
         ws = c.create_watch_session()
         await ws.connect()
-        if use_program:
-            print("Subscribing to program account")
+        if use_program and v2_program_key is not None:
+            # Only subscribe to use program when both flag is turned on and 
+            # the program key exists from the dns resolver
+            print(f"Subscribing to program account with the program key {v2_program_key}")
             await ws.program_subscribe(v2_program_key, await c.get_all_accounts())
         else:
             print("Subscribing to all prices")
@@ -85,6 +100,8 @@ async def main():
                     if isinstance(pr, PythPriceAccount):
                         assert pr.product
                         print(
+                            pr.last_slot,
+                            pr.valid_slot,
                             pr.product.symbol,
                             pr.price_type,
                             pr.aggregate_price_status,
@@ -92,16 +109,17 @@ async def main():
                             "p/m",
                             pr.aggregate_price_confidence_interval,
                         )
-                    break
+                        break
 
         print("Unsubscribing...")
-        if use_program:
+        if use_program and v2_program_key is not None:
+            print("Disconnecting program subscription")
             await ws.program_unsubscribe(v2_program_key)
         else:
+            print("Disconnecting all prices subscription")
             for account in all_prices:
                 await ws.unsubscribe(account)
         await ws.disconnect()
         print("Disconnected")
-
 
 asyncio.run(main())
