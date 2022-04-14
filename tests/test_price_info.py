@@ -17,7 +17,7 @@ def price_info_trading():
 
 @pytest.fixture
 def price_info_trading_bytes():
-    return base64.b64decode(b'EKH74A0AAABkU5ECAAAAAAEAAAAAAAAAQchHBgAAAAA=')
+    return base64.b64decode(b"EKH74A0AAABkU5ECAAAAAAEAAAAAAAAAQchHBgAAAAA=")
 
 
 @pytest.mark.parametrize(
@@ -47,6 +47,8 @@ class TestPythPriceInfo:
         price,
         confidence_interval,
     ):
+        f"""{price} and {confidence_interval} are ignored"""
+
         actual = PythPriceInfo(
             raw_price=raw_price,
             raw_confidence_interval=raw_confidence_interval,

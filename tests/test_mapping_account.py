@@ -24,11 +24,13 @@ def mapping_account_bytes():
         print(base64.b6encode(product_account_bytes))
 
     """
-    return base64.b64decode((
-        b'AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEjWAz1zPieVDC4DUeJQVJHNkVSCT3FtlRNRT'
-        b'HS5+Y9YyAwLFIq6mUslZupUp4/wjvo9Xg7D0M7qDPqgP+wl7qI1FbOGHo/pPl9UC6QHfCFkBHgrhtXngHezy/0nMT'
-        b'qzvA=='
-    ))
+    return base64.b64decode(
+        (
+            b"AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEjWAz1zPieVDC4DUeJQVJHNkVSCT3FtlRNRT"
+            b"HS5+Y9YyAwLFIq6mUslZupUp4/wjvo9Xg7D0M7qDPqgP+wl7qI1FbOGHo/pPl9UC6QHfCFkBHgrhtXngHezy/0nMT"
+            b"qzvA=="
+        )
+    )
 
 
 @pytest.fixture
@@ -51,6 +53,8 @@ def mapping_account(solana_client):
 def test_mapping_account_update_from(
     solana_client, mapping_account, mapping_account_bytes, entries
 ):
+    f"""{solana_client} is ignored"""
+
     mapping_account.update_from(
         buffer=mapping_account_bytes,
         version=_VERSION_2,
@@ -64,6 +68,8 @@ def test_mapping_account_update_from(
 def test_mapping_account_upate_from_null_key(
     solana_client, mapping_account, mapping_account_bytes, entries
 ):
+    f"""{solana_client} is ignored"""
+
     # Replace the last key with a null key
     null_key_bytes = b"\0" * SolanaPublicKey.LENGTH
 
@@ -71,6 +77,9 @@ def test_mapping_account_upate_from_null_key(
     offset = len(mapping_account_bytes) - SolanaPublicKey.LENGTH
 
     # Take the original bytes and add a null key to the end
+    # Bytestrings (and strings in general) are immutable objects in Python.
+    # Once you create them, you can't change them.
+    # Instead, you have to create a new one that happens to have some of the old content.
     bad_bytes = mapping_account_bytes[:offset] + null_key_bytes
 
     mapping_account.update_from(
@@ -87,6 +96,8 @@ def test_mapping_account_upate_from_null_key(
 
 
 def test_mapping_account_str(mapping_account, solana_client):
+    f"""{solana_client} is ignored"""
+
     actual = str(mapping_account)
     expected = f"PythMappingAccount ({mapping_account.key})"
     assert actual == expected

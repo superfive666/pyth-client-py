@@ -69,8 +69,8 @@ def too_short_message():
 
 
 @pytest.mark.parametrize(
-        "buffer_fixture_name",
-        ["bad_magic", "wrong_version", "wrong_size", "too_short"],
+    "buffer_fixture_name",
+    ["bad_magic", "wrong_version", "wrong_size", "too_short"],
 )
 def test_header_parsing_errors(buffer_fixture_name, request):
     buffer = request.getfixturevalue(buffer_fixture_name)

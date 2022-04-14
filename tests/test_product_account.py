@@ -16,11 +16,13 @@ from pythclient.pythaccounts import (
 @pytest.fixture
 def product_account_bytes() -> bytes:
     # Manually split up base64 encoded str for readability
-    return base64.b64decode((
-        b'PdK2NoakUOxykN86HgtYPASB9lE1Ht+nY285rtVc+KMKYXNzZXRfdHlwZQZDcnlw'
-        b'dG8Gc3ltYm9sB0JDSC9VU0QHY291bnRyeQJVUw5xdW90ZV9jdXJyZW5jeQNVU0QL'
-        b'ZGVzY3JpcHRpb24HQkNIL1VTRAV0ZW5vcgRTcG90DmdlbmVyaWNfc3ltYm9sBkJDSFVTRA=='
-    ))
+    return base64.b64decode(
+        (
+            b"PdK2NoakUOxykN86HgtYPASB9lE1Ht+nY285rtVc+KMKYXNzZXRfdHlwZQZDcnlw"
+            b"dG8Gc3ltYm9sB0JDSC9VU0QHY291bnRyeQJVUw5xdW90ZV9jdXJyZW5jeQNVU0QL"
+            b"ZGVzY3JpcHRpb24HQkNIL1VTRAV0ZW5vcgRTcG90DmdlbmVyaWNfc3ltYm9sBkJDSFVTRA=="
+        )
+    )
 
 
 @pytest.fixture
@@ -45,7 +47,9 @@ def product_account(solana_client: SolanaClient):
 
 
 def test_product_account_update_from(
-    product_account: PythProductAccount, product_account_bytes: bytes, solana_client: SolanaClient
+    product_account: PythProductAccount,
+    product_account_bytes: bytes,
+    solana_client: SolanaClient,
 ):
     actual = PythProductAccount(
         key=product_account.key,
@@ -59,7 +63,9 @@ def test_product_account_update_from(
 
 
 def test_update_from_null_first_price_account_key(
-    product_account: PythProductAccount, product_account_bytes: bytes, solana_client: SolanaClient
+    product_account: PythProductAccount,
+    product_account_bytes: bytes,
+    solana_client: SolanaClient,
 ):
     actual = PythProductAccount(
         key=product_account.key,
@@ -70,7 +76,7 @@ def test_update_from_null_first_price_account_key(
     # Zero out the first price account key
     bad_bytes = (
         bytes(b"\x00" * SolanaPublicKey.LENGTH)
-        + product_account_bytes[SolanaPublicKey.LENGTH:]
+        + product_account_bytes[SolanaPublicKey.LENGTH :]
     )
 
     actual.update_from(buffer=bad_bytes, version=_VERSION_2)
@@ -79,14 +85,18 @@ def test_update_from_null_first_price_account_key(
 
 
 def test_product_account_update_from_invalid_attr_key(
-    product_account: PythProductAccount, product_account_bytes: bytes, solana_client: SolanaClient
+    product_account: PythProductAccount,
+    product_account_bytes: bytes,
+    solana_client: SolanaClient,
 ):
     actual = PythProductAccount(
         key=product_account.key,
         solana=solana_client,
     )
 
-    def fake_read_attribute_string(buffer: bytes, offset: int) -> Tuple[Optional[str], str]:
+    def fake_read_attribute_string(
+        buffer: bytes, offset: int
+    ) -> Tuple[Optional[str], int]:
         results = _read_attribute_string(buffer, offset)
         if results[0] == "generic_symbol":
             return (None, results[1])
@@ -120,7 +130,9 @@ def test_symbol_property(product_account):
     assert product_account.symbol == "BCH/USD"
 
 
-def test_symbol_property_unknown(product_account: PythProductAccount, solana_client: SolanaClient):
+def test_symbol_property_unknown(
+    product_account: PythProductAccount, solana_client: SolanaClient
+):
     actual = PythProductAccount(
         key=product_account.key,
         solana=solana_client,

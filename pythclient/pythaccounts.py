@@ -188,7 +188,7 @@ class PythMappingAccount(PythAccount):
         entries: List[SolanaPublicKey] = []
         for _ in range(num_entries):
             new_key = SolanaPublicKey(buffer[offset : offset + SolanaPublicKey.LENGTH])
-            # ignore null keys..
+            # ignore null keys.. (in test_mapping.account.py no.2)
             if new_key != SolanaPublicKey.NULL_KEY:
                 entries.append(
                     SolanaPublicKey(buffer[offset : offset + SolanaPublicKey.LENGTH])
@@ -334,7 +334,7 @@ class PythProductAccount(PythAccount):
         # From the list of new_pricess provided, update the current price of the product account
         self._prices = prices
 
-    def update_from(self, buffer: bytes, *, _: int, offset: int = 0) -> None:
+    def update_from(self, buffer: bytes, *, version: int, offset: int = 0) -> None:
         """
         Update the data in this product account from the given buffer.
 
@@ -347,6 +347,8 @@ class PythProductAccount(PythAccount):
             }
             repeat until end of data or key is empty
         """
+        print(f"Updating product account with verion={version}")
+        print("Product account update is the same for both version 1.0 and version 2.0")
 
         first_price_account_key_bytes = buffer[offset : offset + SolanaPublicKey.LENGTH]
         attrs = {}

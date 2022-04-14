@@ -24,3 +24,7 @@ def caplog(_caplog):
     handler_id = logger.add(PropogateHandler(), format="{message}")
     yield _caplog
     logger.remove(handler_id)
+
+
+def dummy_do_not_use():
+    _caplog
