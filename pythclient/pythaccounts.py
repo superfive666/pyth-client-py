@@ -680,7 +680,9 @@ class PythPriceAccount(PythAccount):
 
     def __str__(self) -> str:
         if self.product:
-            return (f"PythPriceAccount {self.product.symbol} {self.price_type} ({self.key})")
+            return (
+                f"PythPriceAccount {self.product.symbol} {self.price_type} ({self.key})"
+            )
         else:
             return f"PythPriceAccount {self.price_type} ({self.key})"
 

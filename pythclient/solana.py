@@ -84,8 +84,7 @@ class SolanaAccount:
 
     Attributes:
         key (SolanaPublicKey): the public key of this account
-        slot (Optional[int]): the slot time when the data in this account was
-            last updated
+        slot (Optional[int]): the slot time when the data in this account was last updated
         solana (SolanaClient): the Solana RPC client
         lamports (Optional[int]): the account's balance, in lamports
     """
@@ -145,10 +144,13 @@ class SolanaClient:
             ratelimit (Union[False, RateLimit, None]): the rate limit; defaults
                 to a global rate limit based on the endpoint; specify False to
                 disable rate limiting
+
             client (aiohttp.ClientSession): the aiohttp ClientSession to use,
                 will create one on first use otherwise
+
             endpoint (str): the URL to the HTTP endpoint; defaults to the Solana
                 devnet endpoint
+
             ws_endpoint (str): the URL to the WebSocket endpoint; defaults to
                 the Solana devnet endpoint
         """
@@ -197,7 +199,7 @@ class SolanaClient:
     async def __aenter__(self):
         return self
 
-    async def __aexit__(self, exc_type: Any, exc_value: Any, traceback: Any):
+    async def __aexit__(self):
         await self.close()
 
     async def update_accounts(self, accounts: Sequence[SolanaAccount]) -> None:
@@ -216,26 +218,31 @@ class SolanaClient:
     async def http_send(self, method: str, params: Optional[List[Any]] = None, *, return_error: bool = False) -> Any:
         if self.ratelimit:
             await self.ratelimit.apply_method(method, True)
+
         id = self._get_next_id()
         async with self._get_client().post(
             self.endpoint, json=_make_jsonrpc(id, method, params)
         ) as resp:
             if resp.status == 429:  # rate-limited (429 Too Many Requests)
                 raise RateLimitedException()
+
             data = await resp.json()
             if not isinstance(data, dict):
                 raise SolanaException(f"got non-JSON-object {type(data)} from Solana")
+
             data = cast(Dict[str, Any], data)
             received_id: Any = data.get("id")
             if received_id != id:
                 raise SolanaException(
                     f"got response with ID {received_id} to request with ID {id}"
                 )
+
             error: Any = data.get("error")
             if error and not return_error:
                 raise SolanaException(
                     f"Solana RPC error: {error['code']} {error['message']}", error
                 )
+
             return error or data.get("result")
 
     async def get_account_info(

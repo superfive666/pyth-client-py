@@ -102,6 +102,7 @@ class RateLimit:
                 self._method_last_invocation.get(method),
             ),
         )
+
         if connection:
             sleep_for = max(
                 sleep_for,
@@ -109,12 +110,16 @@ class RateLimit:
                     now, self._get_connection_interval(), self._last_connection
                 ),
             )
+
         invoke_at = now + datetime.timedelta(seconds=sleep_for)
         self._method_last_invocation[method] = self._overall_last_invocation = invoke_at
+
         if connection:
             self._last_connection = invoke_at
+
         if sleep_for == 0:
             return
+
         logger.trace("sleeping {} s before method {}", sleep_for, method)
         await asyncio.sleep(sleep_for)
 
@@ -123,9 +128,11 @@ class RateLimit:
         sleep_for = _compute_sleep(
             now, self._get_connection_interval(), self._last_connection
         )
+
         self._last_connection = now + datetime.timedelta(seconds=sleep_for)
         if sleep_for == 0:
             return
+
         logger.trace("sleeping {} s before connecting", sleep_for)
         await asyncio.sleep(sleep_for)
 
@@ -141,6 +148,7 @@ class RateLimit:
         if ':' in host:
             host = host.split(':')[0]
         ratelimit = cls._endpoint_ratelimit.get(host)
+
         if ratelimit is None:
             ratelimit = RateLimit()
             cls._endpoint_ratelimit[host] = ratelimit
