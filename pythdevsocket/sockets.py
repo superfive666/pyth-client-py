@@ -6,7 +6,7 @@ For demonstration purpose, price from one symbol will be filtered
 out for visualization
 """
 
-import asyncio, json, os, sys, signal, websockets, logging
+import asyncio, json, os, sys, signal, logging
 
 from typing import List, Any
 from pythclient.solana import SOLANA_DEVNET_HTTP_ENDPOINT, SOLANA_DEVNET_WS_ENDPOINT
@@ -150,8 +150,7 @@ async def new_connection(conn):
         pass
 
 
-async def main():
-    async with websockets.serve(new_connection, "localhost", 6789):
+async def main(): async with websockets.serve(new_connection, "localhost", 6789):
         logging.info("Price data server started @ localhost: port 6789")
         print("Price data server started @ localhost: port 6789")
         await asyncio.Future()  # run forever
